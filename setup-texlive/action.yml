@@ -1,0 +1,70 @@
+# GitHub Action to set up TeX Live system
+# License: MIT
+#
+name: Set up TeX Live
+description: 'Set up TeX Live system (install if not present and update)'
+inputs:
+  installerurl:
+    description: 'TeX Live installer URL'
+    required: false
+    default: 'http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz'
+  installpath:
+    description: 'TeX Live install path'
+    required: false
+    default: '/tmp/texlive'
+  tlscheme:
+    description: 'TeX Live scheme'
+    required: false
+    default: 'scheme-infraonly'
+  packagelist:
+    description: 'TeX packages to install'
+    required: false
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: 'Add install path to PATH'
+      run: echo "PATH=${{ inputs.installpath }}/bin/x86_64-linux:$PATH" >> $GITHUB_ENV
+      shell: bash
+    - name: 'Install TeX Live if not available'
+      run: |
+        if ! command -v texlua > /dev/null; then
+          mkdir -p tldownload
+          cd tldownload
+          echo "Download TeX Live installer ..."
+          wget ${{ inputs.installerurl }}
+          echo "... unpacking"
+          tar -xzvf $(basename ${{ inputs.installerurl }}) --strip-components=1
+          cat << EOF > texlive.profile
+          selected_scheme ${{ inputs.tlscheme }}
+          TEXDIR ${{ inputs.installpath }}
+          TEXMFCONFIG ~/.texlive/texmf-config
+          TEXMFHOME ~/texmf
+          TEXMFLOCAL ${{ inputs.installpath }}/texmf-local
+          TEXMFSYSCONFIG ${{ inputs.installpath }}/texmf-config
+          TEXMFSYSVAR ${{ inputs.installpath }}/texmf-var
+          TEXMFVAR ~/.texlive/texmf-var
+          option_doc 0
+          option_src 0
+          EOF
+          echo "install TeX Live"
+          ./install-tl --profile=texlive.profile
+          cd ..
+        fi
+      bash: shell
+    - name: 'Update tlmgr'
+      run: tlmgr update --self
+      bash: shell
+    - name: 'Install packages'
+      run: tlmgr install ${{ inputs.packagelist }}
+      bash: shell
+    - name: 'Suppress backups'
+      run: tlmgr option -- autobackup 0
+      bash: shell
+    - name: 'Update packages'
+      run: tlmgr update --self --all --no-auto-install
+      bash: shell
+    - name: 'List installed packages'
+      run: tlmgr list --only-installed
+      bash: shell
