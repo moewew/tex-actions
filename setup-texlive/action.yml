@@ -32,13 +32,16 @@ runs:
         if ! command -v texlua > /dev/null; then
           mkdir -p tldownload
           cd tldownload
-
+          #
           echo "Download TeX Live installer ..."
           wget ${{ inputs.installerurl }}
-
+          #
           echo "... unpacking"
           tar -xzvf $(basename ${{ inputs.installerurl }}) --strip-components=1
-
+          #
+          # note the position of the EOF below
+          # apparently we can't indent it
+          echo "Create TeX Live profile"
           cat <<EOF > texlive.profile
           selected_scheme ${{ inputs.tlscheme }}
           TEXDIR ${{ inputs.installpath }}
@@ -51,7 +54,7 @@ runs:
           option_doc 0
           option_src 0
         EOF
-
+          #
           echo "Run TeX Live installer"
           ./install-tl --profile=texlive.profile
           cd ..
