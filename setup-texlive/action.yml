@@ -36,7 +36,7 @@ runs:
           wget ${{ inputs.installerurl }}
           echo "... unpacking"
           tar -xzvf $(basename ${{ inputs.installerurl }}) --strip-components=1
-          cat << EOF > texlive.profile
+          cat <<EOF > texlive.profile
           selected_scheme ${{ inputs.tlscheme }}
           TEXDIR ${{ inputs.installpath }}
           TEXMFCONFIG ~/.texlive/texmf-config
