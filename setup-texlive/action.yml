@@ -48,7 +48,7 @@ runs:
           option_doc 0
           option_src 0
           EOF
-          echo "install TeX Live"
+          echo "Run TeX Live installer"
           ./install-tl --profile=texlive.profile
           cd ..
         fi
